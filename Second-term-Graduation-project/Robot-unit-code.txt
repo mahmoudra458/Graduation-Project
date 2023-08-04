@@ -1,0 +1,147 @@
+#define M1 13 
+#define M2 12 
+#define M3 A0 
+#define M4 A1 
+#define M5 A2 
+#define M6 A3 
+#define M7 A4 
+#define M8 A5 
+#define PWM1 3 
+#define PWM2 9 
+#define PWM3 10 
+#define PWM4 11 
+#define S0 4 
+#define S1 5 
+#define S2 6 
+#define S3 7 
+#define sp 210 
+#define sensorOut 8 
+#define buz 2 
+int red = 0; 
+int green = 0; 
+int blue = 0; 
+void setup() {   
+	Serial.begin(9600);   
+	pinMode(buz, OUTPUT);   
+	pinMode(S0, OUTPUT);   
+	pinMode(S1, OUTPUT);   
+	pinMode(S2, OUTPUT);   
+	pinMode(S3, OUTPUT);   
+	pinMode(PWM1, OUTPUT); 
+	pinMode(PWM2, OUTPUT);   
+	pinMode(PWM3, OUTPUT); 
+	pinMode(PWM4, OUTPUT);   
+	pinMode(M1, OUTPUT); 
+	pinMode(M2, OUTPUT);   
+	pinMode(M3, OUTPUT); 
+	pinMode(M4, OUTPUT);   
+	pinMode(M5, OUTPUT); 
+	pinMode(M6, OUTPUT);   
+	pinMode(M7, OUTPUT); 
+	pinMode(M8, OUTPUT);
+	pinMode(sensorOut, INPUT);
+	//scaling to 20 %
+	digitalWrite(S0, HIGH);   
+	digitalWrite(S1, LOW);
+}
+
+void loop() {   
+	color(); 
+	if ( (( red >= 80) && ( red <= 100)) && (( green >= 260)&& (  green <= 280)) && (( blue >= 180) && ( blue <= 200 )))
+	{ 
+		Serial.println("RED");     
+		analogWrite(M1, 255);
+    		analogWrite(M2, 0);
+    		analogWrite(PWM1, 50);
+   		 analogWrite(M3, 255);
+    		analogWrite(M4, 0);
+    		analogWrite(PWM2, 50);
+    		digitalWrite(M5, 255); 
+    		digitalWrite(M6, 0); 
+    		analogWrite(PWM3, 50) ;     
+    		digitalWrite(M7, 255); 
+    		digitalWrite(M8, 0); 
+    		analogWrite(PWM4, 50) ;
+  	}
+	if ( (( red >= 240) && ( red <= 260)) && (( green >= 210) && (  green <= 230) && (( blue >= 210) && ( blue <= 230)) ))
+	{
+		Serial.println("GREEN"); 
+		digitalWrite(M1, HIGH); 
+		digitalWrite(M2, LOW);  
+		analogWrite(PWM1, 180);//MOTOR 1 
+		digitalWrite(M3, LOW); 
+		digitalWrite(M4, HIGH); 
+		analogWrite(PWM2, 180); //MOTOR 2 
+		digitalWrite(M5, LOW); 
+		digitalWrite(M6, HIGH); 
+		analogWrite(PWM3, 180); //MOTOR 3 
+		digitalWrite(M7, HIGH); 
+		digitalWrite(M8, LOW);  
+		analogWrite(PWM4, 180) ; //MOTOR 4 
+	}
+	if ( (( red >= 60) && ( red <= 80)) && (( green >= 110) && (  green <= 130) && (( blue >= 160) && ( blue <=180)) )
+	{
+		Serial.println("YELLOW");     
+		digitalWrite(M1, LOW); 
+		digitalWrite(M2, LOW);     
+		digitalWrite(M3, LOW); 
+		digitalWrite(M4, LOW);     
+		digitalWrite(M5, LOW); 
+		digitalWrite(M6, LOW);     
+		digitalWrite(M7, LOW); 
+		digitalWrite(M8, LOW); 
+		tone(buz, HIGH);
+		delay(500);      
+		noTone(buz, LOW);
+		delay(500);     
+		noTone(buz, LOW);      
+		delay(10000); 
+		digitalWrite(M1, HIGH); 
+		digitalWrite(M2, LOW); 
+		analogWrite(PWM1, 180); //MOTOR 1 
+		digitalWrite(M3, HIGH); 
+		digitalWrite(M4, LOW); 
+		analogWrite(PWM2, 180); //MOTOR 2 
+		digitalWrite(M5, HIGH); 
+		digitalWrite(M6, LOW); 
+		analogWrite(PWM3, 180); //MOTOR 3 
+		digitalWrite(M7, HIGH);
+		digitalWrite(M8, LOW); 
+		analogWrite(PWM4, 180) ; //MOTOR 4     
+		delay(2500); 
+	}
+	if ( (( red >= 300) && ( red <= 330)) && (( green >= 360) && (  green <= 390)) && (( blue >= 280) && ( blue <= 310))) 
+	{ 
+		Serial.println("BLACK");    
+		digitalWrite(M1, LOW); 
+		digitalWrite(M2, LOW);     
+		digitalWrite(M3, LOW); 
+		digitalWrite(M4, LOW);     
+		digitalWrite(M5, LOW); 
+		digitalWrite(M6, LOW);     
+		digitalWrite(M7, LOW); 
+		digitalWrite(M8, LOW); 
+	} 
+
+}
+void color() { 
+
+  // Setting RED (R) filtered photodiodes to be read   
+	digitalWrite(S2, LOW);   
+	digitalWrite(S3, LOW);   
+	// Reading the output frequency   
+	red = pulseIn(sensorOut, LOW); 
+	delay(100); 
+	// Setting GREEN (G) filtered photodiodes to be read   
+	digitalWrite(S2, HIGH);   
+	digitalWrite(S3, HIGH);   
+	// Reading the output frequency   
+	green = pulseIn(sensorOut, LOW); 
+	delay(100); 
+	// Setting BLUE (B) filtered photodiodes to be read   
+	digitalWrite(S2, LOW);   
+	digitalWrite(S3, HIGH);   
+	// Reading the output frequency   
+	blue = pulseIn(sensorOut, LOW); 
+	delay(100);
+} 

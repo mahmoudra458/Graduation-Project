@@ -1,0 +1,194 @@
+
+#define BLYNK_TEMPLATE_ID "TMPLZWWH0WVJ"
+#define BLYNK_TEMPLATE_NAME "SMART MEDICINE BOX"
+
+#define BLYNK_AUTH_TOKEN "NWtBlMvyHzcMaSdYxHu5PzLo7MSLAIWe" 
+
+#define BLYNK_PRINT Serial 
+
+#include <ESP8266WiFi.h> 
+
+#include <BlynkSimpleEsp8266.h> 
+
+#include <DHT.h> 
+
+#include <Wire.h> 
+
+#include "MAX30100_PulseOximeter.h" 
+
+#include <SPI.h> 
+
+#include <Wire.h> 
+
+#include <Adafruit_GFX.h> 
+
+#include <Adafruit_SSD1306.h> 
+
+#include <Servo.h> PulseOximeter pox; 
+
+uint32_t tsLastReport = 0; 
+
+#define REPORTING_PERIOD_MS       1000 
+
+float BPM, SpO2; 
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels 
+
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin) 
+
+#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32 
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET); 
+
+#define NUMFLAKES     10 // Number of snowflakes in the animation example 
+
+#define LOGO_HEIGHT   16 #define LOGO_WIDTH    16 char auth[] = BLYNK_AUTH_TOKEN; char ssid[] = "smart"; char pass[] = "smart@12345"; 
+
+#define DHTPIN 2 
+
+#define DHTTYPE DHT11 
+
+DHT dht(DHTPIN, DHTTYPE); 
+
+BlynkTimer timer; 
+
+Servo servo1; 
+
+Servo servo2; 
+
+BLYNK_WRITE(V3) 
+{ 
+
+  servo1.write(param.asInt()); 
+
+} 
+
+BLYNK_WRITE(V4) 
+
+{ 
+
+  servo2.write(param.asInt()); 
+
+} 
+
+void sendSensor() 
+{  
+   float h = dht.readHumidity();
+  float t = dht.readTemperature();   
+  display.setTextSize(1);   
+  display.setTextColor(1);   
+  display.setCursor(0, 45);   
+  display.println("Temp :");   
+  display.setTextSize(1);   
+  display.setTextColor(1);   
+  display.setCursor(60, 45);   
+  display.println(t);   
+  display.display();   
+  delay(1000);   
+  if (isnan(h) || isnan(t)) { 
+
+    Serial.println("Failed to read from DHT sensor!");     return; 
+
+  } 
+
+  Blynk.virtualWrite(V2, t); 
+
+ 
+
+}
+void onBeatDetected() { 
+
+  Serial.println("Beat!"); 
+
+} 
+
+void setup() { 
+
+  Serial.begin(115200); 
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) 
+
+  { 
+
+    Serial.println(F("SSD1306 allocation failed"));     for (;;); 
+
+  } 
+
+  display.setTextSize(1.5);   display.setTextColor(1);   display.setCursor(0, 0); 
+
+  display.println("Initializing pulse oximeter.."); 
+
+  display.display(); 
+
+  Blynk.begin(auth, ssid, pass);   servo1.attach(14);   servo2.attach(13); 
+
+  Serial.print("Initializing pulse oximeter.."); 
+
+ 
+
+  if (!pox.begin()) { 
+
+    Serial.println("FAILED");     display.clearDisplay();     display.setTextSize(1.5);     display.setTextColor(1);     display.setCursor(0, 0);     display.println("FAILED"); 
+
+    display.display(); 
+
+    for (;;);  
+ }   
+ else { 
+
+    display.clearDisplay();     
+    display.setTextSize(1.5);     
+    display.setTextColor(1);     
+    display.setCursor(0, 0);     
+    display.println("SUCCESS");     
+    display.display(); 
+    Serial.println("SUCCESS"); 
+
+  } 
+  pox.setOnBeatDetectedCallback(onBeatDetected);    
+  dht.begin(); 
+  timer.setInterval(1000L, sendSensor); 
+
+} 
+void loop() {
+      
+  pox.update(); 
+  if (millis() - tsLastReport > REPORTING_PERIOD_MS) 
+
+  { 
+    
+      BPM = pox.getHeartRate(); 
+      SpO2 = pox.getSpO2(); 
+      Serial.print("BPM: "); 
+      Serial.println(BPM); 
+      Serial.print("SpO2: "); 
+      Serial.print(SpO2); 
+      Serial.println("%"); 
+      Serial.println("*********************************"); 
+      Serial.println(); 
+      display.clearDisplay(); 
+      display.setTextSize(1.5);     
+      display.setTextColor(1);     
+      display.setCursor(60, 0);     
+      display.println(BPM);     
+      display.setTextSize(1.5);     
+      display.setTextColor(1);     
+      display.setCursor(0, 0);     
+      display.println("BPM :");     
+      display.setTextSize(1.5);     
+      display.setTextColor(1);     
+      display.setCursor(0, 20);     
+      display.println("Spo2 :");     
+      display.setTextSize(1.5);     
+      display.setTextColor(1);     
+      display.setCursor(60, 20);     
+      display.println(SpO2);     
+      display.display();     
+      tsLastReport = millis();     
+      Blynk.virtualWrite(V0, BPM); 
+      Blynk.virtualWrite(V1, SpO2); 
+  } 
+  Blynk.run();   
+  timer.run(); 
+
+}
